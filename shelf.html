@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>书架动画示例</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+        background: #f5f5dc;
+        position: relative;
+    }
+
+    .controls {
+        position: fixed;
+        left: 20px;
+        top: 20px;
+        z-index: 999;
+        background: rgba(255,255,255,0.9);
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
+    }
+
+    .controls button {
+        display: block;
+        margin: 10px 0;
+        padding: 6px 12px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 3px;
+        border: none;
+        background: #4CAF50;
+        color: #fff;
+    }
+
+    .controls button:hover {
+        background: #45a049;
+    }
+
+    .bookshelf-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 80px 20px 20px;
+        transition: all 0.5s ease;
+    }
+
+    .bookshelf {
+        background: #8B4513;
+        margin: 20px;
+        padding: 20px;
+        border-radius: 5px;
+        transition: all 0.5s ease;
+    }
+
+    .shelf {
+        background: #A0522D;
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 3px;
+        display: flex;
+        flex-wrap: wrap;
+        transition: all 0.5s ease;
+    }
+
+    .book {
+        width: 15px;
+        height: 40px;
+        background: #964B00;
+        margin: 2px;
+        border-radius: 2px;
+        transition: transform 0.5s ease;
+    }
+
+    .book:hover {
+        transform: translateY(-5px);
+    }
+
+    /* 右上角显示总书数 */
+    .total-count {
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        background: rgba(255,255,255,0.9);
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
+        font-size: 14px;
+        z-index: 999;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="controls">
+    <button id="increaseBooks">增长书架(增加每层的书)</button>
+    <button id="addShelfLevel">增加书架层数</button>
+    <button id="addBookshelf">增加书架数量</button>
+    <button id="reset">还原</button>
+</div>
+
+<div class="total-count">总书数: <span id="totalCount">0</span></div>
+
+<div class="bookshelf-container" id="bookshelfContainer">
+    <!-- 动态生成书架 -->
+</div>
+
+<script>
+    // 初始数据设置
+    let initialShelfCount = 5;      // 初始层数
+    let initialBooksPerShelf = 10;  // 每层书数量
+    let initialBookshelfNumber = 1; // 初始书架数量
+
+    let currentShelfCount = initialShelfCount;     
+    let currentBooksPerShelf = initialBooksPerShelf; 
+    let currentBookshelfNumber = initialBookshelfNumber;
+
+    const bookshelfContainer = document.getElementById('bookshelfContainer');
+    const totalCountSpan = document.getElementById('totalCount');
+
+    // 渲染书架函数
+    function renderBookshelves() {
+        // 清空
+        bookshelfContainer.innerHTML = '';
+
+        for (let i = 0; i < currentBookshelfNumber; i++) {
+            const bookshelfDiv = document.createElement('div');
+            bookshelfDiv.classList.add('bookshelf');
+
+            for (let j = 0; j < currentShelfCount; j++) {
+                const shelfDiv = document.createElement('div');
+                shelfDiv.classList.add('shelf');
+
+                for (let k = 0; k < currentBooksPerShelf; k++) {
+                    const bookDiv = document.createElement('div');
+                    bookDiv.classList.add('book');
+                    shelfDiv.appendChild(bookDiv);
+                }
+
+                bookshelfDiv.appendChild(shelfDiv);
+            }
+
+            bookshelfContainer.appendChild(bookshelfDiv);
+        }
+
+        updateTotalCount();
+    }
+
+    // 更新总书数显示
+    function updateTotalCount() {
+        const totalBooks = currentBookshelfNumber * currentShelfCount * currentBooksPerShelf;
+        totalCountSpan.textContent = totalBooks;
+    }
+
+    // 增长书架（增加每层的书数）
+    document.getElementById('increaseBooks').addEventListener('click', () => {
+        currentBooksPerShelf += 5; // 增加5本书为例
+        renderBookshelves();
+    });
+
+    // 增加书架层数
+    document.getElementById('addShelfLevel').addEventListener('click', () => {
+        currentShelfCount += 1; // 增加一层
+        // 新增这一层有和当前层数相同的书数量
+        renderBookshelves();
+    });
+
+    // 增加书架数量
+    document.getElementById('addBookshelf').addEventListener('click', () => {
+        currentBookshelfNumber += 1;
+        renderBookshelves();
+    });
+
+    // 还原
+    document.getElementById('reset').addEventListener('click', () => {
+        currentShelfCount = initialShelfCount;
+        currentBooksPerShelf = initialBooksPerShelf;
+        currentBookshelfNumber = initialBookshelfNumber;
+        renderBookshelves();
+    });
+
+    // 初始渲染
+    renderBookshelves();
+</script>
+
+</body>
+</html>
