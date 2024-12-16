@@ -1,192 +1,361 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>书架动画示例</title>
+<meta charset="UTF-8">
+<title>书架摆放示例</title>
 <style>
     body {
         margin: 0;
-        padding: 0;
         font-family: sans-serif;
-        background: #f5f5dc;
-        position: relative;
-    }
-
-    .controls {
-        position: fixed;
-        left: 20px;
-        top: 20px;
-        z-index: 999;
-        background: rgba(255,255,255,0.9);
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
-    }
-
-    .controls button {
-        display: block;
-        margin: 10px 0;
-        padding: 6px 12px;
-        font-size: 14px;
-        cursor: pointer;
-        border-radius: 3px;
-        border: none;
-        background: #4CAF50;
-        color: #fff;
-    }
-
-    .controls button:hover {
-        background: #45a049;
-    }
-
-    .bookshelf-container {
+        background: #f0f0f0;
         display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 80px 20px 20px;
-        transition: all 0.5s ease;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+    }
+    .top-bar {
+        width: 100%;
+        height: 50px;
+        background: #333;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-sizing: border-box;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999;
+    }
+    .top-bar .buttons {
+        display: flex;
+        gap: 10px;
+    }
+    .top-bar button {
+        background: #555;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 3px;
+    }
+    .top-bar button:hover {
+        background: #777;
+    }
+
+    .info-panel {
+        position: fixed;
+        top: 10px;
+        right: 20px;
+        background: rgba(255,255,255,0.8);
+        padding: 10px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        min-width: 150px;
+        z-index: 999;
+        border-radius: 3px;
+    }
+
+    .main-container {
+        margin-top: 100px; 
+        transform: scale(1.2);
+        transform-origin: top center;
+        margin-bottom: 150px; /* 保证底部有空间放置注释 */
+    }
+
+    .wall-container {
+        width: 600px; /* 6m = 600px */
+        height: 300px;
+        background: #ddd;
+        border: 2px solid #bbb;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        border-radius: 5px;
     }
 
     .bookshelf {
-        background: #8B4513;
-        margin: 20px;
-        padding: 20px;
-        border-radius: 5px;
+        position: absolute;
+        bottom: 0;
+        background: linear-gradient(45deg, #9b7b50 0%, #cfa75f 100%);
+        border: 2px solid #654321;
+        box-sizing: border-box;
+        opacity: 0;
+        transform: translateY(20px);
         transition: all 0.5s ease;
+        border-radius: 5px;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
+    .bookshelf.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .bookshelf:hover {
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3);
+        cursor: pointer;
     }
 
-    .shelf {
-        background: #A0522D;
-        margin-bottom: 20px;
-        padding: 10px;
-        border-radius: 3px;
+    /* 每层是40px高（书本30px高，上方留10px空隙） */
+    .layer {
+        position: absolute;
+        width: 100%;
+        height: 40px; 
         display: flex;
-        flex-wrap: wrap;
-        transition: all 0.5s ease;
+        justify-content: flex-start;
+        align-items: flex-end; 
     }
 
     .book {
-        width: 15px;
-        height: 40px;
-        background: #964B00;
-        margin: 2px;
-        border-radius: 2px;
-        transition: transform 0.5s ease;
+        width: 20px; 
+        height: 30px; 
+        background: #c33;
+        transition: transform 0.2s ease, background 0.3s ease;
     }
-
+    .book:nth-child(4n) {
+        background: #3c3;
+    }
+    .book:nth-child(4n+1) {
+        background: #33c;
+    }
+    .book:nth-child(4n+2) {
+        background: #cc3;
+    }
+    .book:nth-child(4n+3) {
+        background: #c3c;
+    }
     .book:hover {
-        transform: translateY(-5px);
+        transform: translateY(-5px) rotate(-5deg) scale(1.1);
+        background: #f90;
     }
 
-    /* 右上角显示总书数 */
-    .total-count {
-        position: fixed;
-        right: 20px;
-        top: 20px;
-        background: rgba(255,255,255,0.9);
-        padding: 10px;
+    .footer-info {
+        width: 60%;
+        background: #fff;
+        border: 1px solid #ccc;
         border-radius: 5px;
-        box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
-        font-size: 14px;
-        z-index: 999;
+        margin: 30px auto;
+        padding: 10px;
+        font-size: 16px;
+        line-height: 1.6;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
+    .footer-info h3 {
+        margin-top: 0;
+    }
+    .footer-info ul {
+        list-style-type: disc;
+        padding-left: 20px;
+    }
 </style>
 </head>
 <body>
-
-<div class="controls">
-    <button id="increaseBooks">增长书架(增加每层的书)</button>
-    <button id="addShelfLevel">增加书架层数</button>
-    <button id="addBookshelf">增加书架数量</button>
-    <button id="reset">还原</button>
+<div class="top-bar">
+    <div class="buttons">
+        <button id="addShelfBtn">增加书架</button>
+        <button id="addLayerBtn">增加书架层数</button>
+        <button id="addWidthBtn">增加书架宽度</button>
+        <button id="resetBtn">还原</button>
+    </div>
+</div>
+<div class="info-panel" id="infoPanel">
+    <div>书架高度: <span id="shelfHeightInfo">-</span></div>
+    <div>书架宽度: <span id="shelfWidthInfo">-</span></div>
+    <div>书本总数: <span id="totalBooksInfo">-</span></div>
+</div>
+<div class="main-container">
+    <div class="wall-container" id="wall"></div>
 </div>
 
-<div class="total-count">总书数: <span id="totalCount">0</span></div>
-
-<div class="bookshelf-container" id="bookshelfContainer">
-    <!-- 动态生成书架 -->
+<div class="footer-info">
+    <h3>使用说明：</h3>
+    <p><b>增加书架：</b> 点击一下，就会在墙上出现一个新的小书架。</p>
+    <p><b>增加书架层数：</b> 用鼠标点一下你想加高的书架，再点这个按钮，书架就会多一层，并且这一层会自动放满书。</p>
+    <p><b>增加书架宽度：</b> 用鼠标点一下想变宽的书架，再点这个按钮，书架会变宽，并且每一层都会重新放满书。</p>
+    <p><b>还原：</b> 如果想重新开始，就点这个按钮，所有书架清空。</p>
+    <p><b>提示：</b> 每次你增加层数或宽度，都会重新计算书本数量，让每一层都刚好被书本填满。</p>
+    
+    <h3>参数说明：</h3>
+    <ul>
+        <li>墙的宽度：6米  书架的最小宽度和初始化宽度：1米  书架的最高层数：6层  </li>
+        <li>书架和书架之间的间距：0.2米  书本的宽度：约0.05米  每次增加书架宽度的长度：0.2米</li>
+    </ul>
 </div>
 
 <script>
-    // 初始数据设置
-    let initialShelfCount = 5;      // 初始层数
-    let initialBooksPerShelf = 10;  // 每层书数量
-    let initialBookshelfNumber = 1; // 初始书架数量
+    // 参数设定
+    const wallWidth = 600;     // 墙的宽度 6m=600px
+    const shelfMaxLayers = 6;  // 书架最大层数
+    const layerHeight = 40;    // 每层高度40px（书本30px高，上部留10px空隙）
+    const shelfMaxWidth = 200; // 书架最大宽度200px（2m）
+    const shelfGap = 20;       // 书架间距20px (0.2m)
+    const initialShelfWidth = 100;  // 初始书架宽度100px(1m)
+    const shelfWidthIncrement = 20; // 每次增加书架宽度20px
+    const bookWidth = 5;      // 每本书20px宽
+    const bookHeight = 30;     // 每本书30px高
 
-    let currentShelfCount = initialShelfCount;     
-    let currentBooksPerShelf = initialBooksPerShelf; 
-    let currentBookshelfNumber = initialBookshelfNumber;
+    let shelves = []; // 存储书架的数据 {width, layers, books, x}
+    let selectedShelfIndex = null; // 当前选中的书架索引
 
-    const bookshelfContainer = document.getElementById('bookshelfContainer');
-    const totalCountSpan = document.getElementById('totalCount');
+    const wall = document.getElementById('wall');
+    const shelfHeightInfo = document.getElementById('shelfHeightInfo');
+    const shelfWidthInfo = document.getElementById('shelfWidthInfo');
+    const totalBooksInfo = document.getElementById('totalBooksInfo');
 
-    // 渲染书架函数
-    function renderBookshelves() {
-        // 清空
-        bookshelfContainer.innerHTML = '';
+    // 根据层数和宽度计算书本数量
+    // 保证宽度是bookWidth的整倍数，这样一层能放整数个书本，层层填满
+    function computeBooksCount(layers, width) {
+        const perLayerCount = Math.floor(width / bookWidth);
+        return perLayerCount * layers;
+    }
 
-        for (let i = 0; i < currentBookshelfNumber; i++) {
-            const bookshelfDiv = document.createElement('div');
-            bookshelfDiv.classList.add('bookshelf');
+    function updateInfoPanel() {
+        if (selectedShelfIndex === null || shelves[selectedShelfIndex] === undefined) {
+            shelfHeightInfo.textContent = '-';
+            shelfWidthInfo.textContent = '-';
+            totalBooksInfo.textContent = '-';
+        } else {
+            const s = shelves[selectedShelfIndex];
+            shelfHeightInfo.textContent = (s.layers * 0.4).toFixed(1) + 'm';
+            shelfWidthInfo.textContent = (s.width / 100).toFixed(1) + 'm';
+            totalBooksInfo.textContent = s.books;
+        }
+    }
 
-            for (let j = 0; j < currentShelfCount; j++) {
-                const shelfDiv = document.createElement('div');
-                shelfDiv.classList.add('shelf');
+    function createShelfElement(shelfData, index) {
+        const shelf = document.createElement('div');
+        shelf.className = 'bookshelf';
+        shelf.style.width = shelfData.width + 'px';
+        shelf.style.height = (shelfData.layers * layerHeight) + 'px';
+        shelf.style.left = shelfData.x + 'px';
 
-                for (let k = 0; k < currentBooksPerShelf; k++) {
-                    const bookDiv = document.createElement('div');
-                    bookDiv.classList.add('book');
-                    shelfDiv.appendChild(bookDiv);
-                }
-
-                bookshelfDiv.appendChild(shelfDiv);
+        const booksPerLayer = shelfData.width / bookWidth;
+        for (let i = 0; i < shelfData.layers; i++) {
+            const layerDiv = document.createElement('div');
+            layerDiv.className = 'layer';
+            layerDiv.style.bottom = (i * layerHeight) + 'px';
+            
+            // 在该层放满书本
+            for (let j = 0; j < booksPerLayer; j++) {
+                const book = document.createElement('div');
+                book.className = 'book';
+                layerDiv.appendChild(book);
             }
-
-            bookshelfContainer.appendChild(bookshelfDiv);
+            shelf.appendChild(layerDiv);
         }
 
-        updateTotalCount();
+        // 点击选中该书架
+        shelf.addEventListener('click', () => {
+            selectedShelfIndex = index;
+            updateInfoPanel();
+        });
+
+        wall.appendChild(shelf);
+        shelf.offsetWidth; 
+        shelf.classList.add('visible');
+        return shelf;
     }
 
-    // 更新总书数显示
-    function updateTotalCount() {
-        const totalBooks = currentBookshelfNumber * currentShelfCount * currentBooksPerShelf;
-        totalCountSpan.textContent = totalBooks;
+    function renderShelves() {
+        wall.innerHTML = '';
+        shelves.forEach((s, i) => {
+            createShelfElement(s, i);
+        });
     }
 
-    // 增长书架（增加每层的书数）
-    document.getElementById('increaseBooks').addEventListener('click', () => {
-        currentBooksPerShelf += 5; // 增加5本书为例
-        renderBookshelves();
+    function canAddShelf() {
+        let totalWidth = 0;
+        for (let i = 0; i < shelves.length; i++) {
+            totalWidth += shelves[i].width;
+            if (i < shelves.length - 1) {
+                totalWidth += shelfGap;
+            }
+        }
+        const newTotalWidth = shelves.length > 0 ? totalWidth + shelfGap + initialShelfWidth : totalWidth + initialShelfWidth;
+        return newTotalWidth <= wallWidth;
+    }
+
+    function computeShelfPositions() {
+        let currentX = 0;
+        shelves.forEach((s, i) => {
+            s.x = currentX;
+            currentX += s.width;
+            if (i < shelves.length - 1) {
+                currentX += shelfGap;
+            }
+        });
+    }
+
+    function refillBooks(shelf) {
+        shelf.books = computeBooksCount(shelf.layers, shelf.width);
+    }
+
+    document.getElementById('addShelfBtn').addEventListener('click', () => {
+        if (canAddShelf()) {
+            const newShelf = {
+                width: initialShelfWidth,
+                layers: 1,
+                books: 0,
+                x: 0
+            };
+            refillBooks(newShelf);
+            shelves.push(newShelf);
+            computeShelfPositions();
+            renderShelves();
+            selectedShelfIndex = shelves.length - 1;
+            updateInfoPanel();
+        } else {
+            alert('无法再增加书架，超出墙面宽度限制！');
+        }
     });
 
-    // 增加书架层数
-    document.getElementById('addShelfLevel').addEventListener('click', () => {
-        currentShelfCount += 1; // 增加一层
-        // 新增这一层有和当前层数相同的书数量
-        renderBookshelves();
+    document.getElementById('addLayerBtn').addEventListener('click', () => {
+        if (selectedShelfIndex === null) {
+            alert('请先选择一个书架！');
+            return;
+        }
+        const shelf = shelves[selectedShelfIndex];
+        if (shelf.layers < shelfMaxLayers) {
+            shelf.layers++;
+            refillBooks(shelf);
+            computeShelfPositions();
+            renderShelves();
+            updateInfoPanel();
+        } else {
+            alert('该书架已达到最高层数(6层)！');
+        }
     });
 
-    // 增加书架数量
-    document.getElementById('addBookshelf').addEventListener('click', () => {
-        currentBookshelfNumber += 1;
-        renderBookshelves();
+    document.getElementById('addWidthBtn').addEventListener('click', () => {
+        if (selectedShelfIndex === null) {
+            alert('请先选择一个书架！');
+            return;
+        }
+        const shelf = shelves[selectedShelfIndex];
+        if (shelf.width < shelfMaxWidth) {
+            const newWidth = shelf.width + shelfWidthIncrement <= shelfMaxWidth ? shelf.width + shelfWidthIncrement : shelfMaxWidth;
+            shelf.width = newWidth;
+            refillBooks(shelf);
+            computeShelfPositions();
+            renderShelves();
+            updateInfoPanel();
+        } else {
+            alert('该书架已达到最大宽度！');
+        }
     });
 
-    // 还原
-    document.getElementById('reset').addEventListener('click', () => {
-        currentShelfCount = initialShelfCount;
-        currentBooksPerShelf = initialBooksPerShelf;
-        currentBookshelfNumber = initialBookshelfNumber;
-        renderBookshelves();
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        shelves = [];
+        selectedShelfIndex = null;
+        wall.innerHTML = '';
+        updateInfoPanel();
     });
 
-    // 初始渲染
-    renderBookshelves();
+    // 初始化
+    updateInfoPanel();
 </script>
-
 </body>
 </html>
